@@ -22,7 +22,7 @@ struct Key{
 
 void view(int field[10][10]);
 void outColorString(char *, char *);
-int controlPlayer(struct Player *, int);
+void controlPlayer(struct Player *, int);
 void setKey(struct Key *);
 void setDirection(int directionKeys[4]);
 int inputDirection(struct Key *, int directionKeys[4]);
@@ -51,24 +51,19 @@ int main(){
     int errorStatus = 0;
     int directionKeys[4];
     while(1){
-        //前回エラー終了の場合の処理
-        if(errorStatus == -1) printf("\033[1A");
-
         //上下左右のキーの決定と表示
         setDirection(directionKeys);
         printf("    %c    \n\n%c       %c\n\n    %c    \n", Key[directionKeys[0]].keyChar, Key[directionKeys[1]].keyChar, Key[directionKeys[2]].keyChar, Key[directionKeys[3]].keyChar);
         
-        // printf("\e[A\e[K");
-        field[player.x][player.y] = DOT;
-        tmp = inputDirection(Key, directionKeys);
-        printf("%d", tmp);
-        errorStatus = controlPlayer(control, tmp);
-        field[player.x][player.y] = PLAYER;
-        system("cls");
+        //PLAYERの移動
+        field[player.x][player.y] = DOT; //もといた場所はDOTに
+        controlPlayer(control, inputDirection(Key, directionKeys)); //PLAYERの移動方向の取得と移動先の指定
+        field[player.x][player.y] = PLAYER;//移動完了
+
+        //移動後の画面を表示
+        system("cls");//コンソールのクリア
         view(field);
     }
-
-    
 
     return 0;
 }
@@ -94,17 +89,12 @@ void outColorString(char *color, char *string){
     printf("\x1b[0m");
 }
 
-int controlPlayer(struct Player *player, int direction){
+void controlPlayer(struct Player *player, int direction){
 
     if(direction == UP && player -> y > 0) player -> y--;
     else if(direction == DOWN &&  player -> y < 9) player -> y++;
     else if(direction == RIGHT && player -> x < 9) player -> x++;
     else if(direction == LEFT && player -> x > 0) player -> x--;
-    else{
-        printf("type again\n");
-        return -1; //異常終了
-    }
-    return 0;
 }
 
 void setKey(struct Key *Key){
