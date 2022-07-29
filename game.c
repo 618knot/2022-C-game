@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include<conio.h>
+#include<conio.h> //cygwinにない
 #include<time.h>
 #define DOT 0
 #define PLAYER 1
@@ -47,8 +47,7 @@ int main(){
     //初期状態の表示
     view(field);
 
-    int tmp;
-    int errorStatus = 0;
+    //ゲーム画面のメインループ
     int directionKeys[4];
     while(1){
         //上下左右のキーの決定と表示
@@ -58,45 +57,60 @@ int main(){
         //PLAYERの移動
         field[player.x][player.y] = DOT; //もといた場所はDOTに
         controlPlayer(control, inputDirection(Key, directionKeys)); //PLAYERの移動方向の取得と移動先の指定
-        field[player.x][player.y] = PLAYER;//移動完了
+        if(field[player.x][player.y] == DOT) field[player.x][player.y] = PLAYER;//移動完了
+        else if(field[player.x][player.y] == GOAL){ //ゴールについたらメインループを抜ける
+            field[player.x][player.y] = PLAYER;
+            system("cls");
+            view(field);
+            break;
+        }
 
         //移動後の画面を表示
         system("cls");//コンソールのクリア
         view(field);
     }
 
+    printf("\x1b[46m");//背景シアン
+    printf("\x1b[1m");//太文字
+    printf("GOAL");
+    printf("\x1b[0m");//元に戻す
+    printf("\x1b[49m");
+
     return 0;
 }
 
+//画面への出力
 void view(int field[10][10]){
     for(int j = 0; j < 10; j++){
         for(int i = 0; i < 10; i++){
             if(field[i][j] == DOT){
                 printf(". ");
             }else if(field[i][j] == PLAYER){
-                outColorString("\x1b[31m", "P ");
+                outColorString("\x1b[31m", "P "); //赤
             }else if(field[i][j] == GOAL){
-                outColorString("\x1b[32m", "G ");
+                outColorString("\x1b[32m", "G "); //緑
             }
         }
         printf("\n");
     }
 }
 
+//文字に色をつける
 void outColorString(char *color, char *string){
-    printf("%s", color);
+    printf("%s", color); //color
     printf("%s", string);
-    printf("\x1b[0m");
+    printf("\x1b[0m"); //白
 }
 
+//Playerの移動管理
 void controlPlayer(struct Player *player, int direction){
-
     if(direction == UP && player -> y > 0) player -> y--;
     else if(direction == DOWN &&  player -> y < 9) player -> y++;
     else if(direction == RIGHT && player -> x < 9) player -> x++;
     else if(direction == LEFT && player -> x > 0) player -> x--;
 }
 
+//Key構造体の設定
 void setKey(struct Key *Key){
     for(int i = 0; i < 26; i++){    //97~122 = a~z
         Key[i].keyCode = i + 97;
@@ -111,18 +125,21 @@ void setKey(struct Key *Key){
     return;
 }
 
+//上下左右に該当する文字の決定
 void setDirection(int directionKeys[4]){
     for(int i = 0; i < 4; i++){
         directionKeys[i] = rand() % 26;
     }
 
+    //文字が被ってたらやり直し
     for(int i = 0; i < 4; i++){
         for(int j = i + 1; j < 4; j++){
-            if(directionKeys[i] == directionKeys[j]) setDirection(directionKeys); //被ってたらやり直し
+            if(directionKeys[i] == directionKeys[j]) setDirection(directionKeys);
         }
     }
 }
 
+//移動方向の入力
 int inputDirection(struct Key *Key, int directionKeys[4]){
     int tmp = _getch();
         if(tmp == Key[directionKeys[0]].keyCode) return UP;
